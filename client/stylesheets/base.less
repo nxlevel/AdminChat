@@ -953,7 +953,7 @@ a.github-fork {
 		.calc(height, ~'100% - ' @header-min-height);
 		.transition(transform .3s cubic-bezier(.5, 0, .1, 1));
 		&._hidden {
-			.transform(translateY(-86%) translateY(-36px));
+			.transform(translateX(-86%) translateX(-36px));
 		}
 		> .wrapper {
 			direction: ltr;
@@ -998,7 +998,12 @@ a.github-fork {
 					background-color: #D30230;
 				}
 			}
-		}.settings {display: none}
+		  	&.settings {
+			{
+			  display: none;
+			}
+			}
+		}
 
 		span.soon {
 			// content: "em breve";
