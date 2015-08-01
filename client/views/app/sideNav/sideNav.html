@@ -2,6 +2,11 @@
 	<aside class="side-nav" role="navigation">
 		<header class="header">
 			{{> userStatus}}
+			<div class="burger">
+				<i></i>
+				<i></i>
+				<i></i>
+			</div>
 		</header>
 		{{#if currentUser}}
 			<div class="rooms-list">
@@ -25,11 +30,6 @@
 					{{> UI.dynamic template=flexTemplate data=flexData}}
 				</section>
 			</div>
-		<div class="burger">
-			<i></i>
-			<i></i>
-			<i></i>
-		</div>
 		{{/if}}
 	</aside>
 </template>

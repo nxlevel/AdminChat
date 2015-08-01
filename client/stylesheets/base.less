@@ -1315,19 +1315,19 @@ a.github-fork {
 		height: @header-min-height;
 		background-color: @primary-background-color;
 	}
-	> .arrow {
-		position: absolute;
-		top: 18px;
-		right: 8px;
-		z-index: 1000;
-		cursor: pointer;
-		&.hover,
-		&:hover {
-			&:before,
-			&:after {
-				background-color: rgba(255, 255, 255, 0.85);
-			}
+	> .burger {
+	  left: 205px;
+	  margin: 0;
+	  padding: 17px 17px;
+	  top: 0;
+	  border-right: solid 1px #084B75;
+		&.hover > i,
+		&:hover > i {
+		  background-color: #3EAFDB;
 		}
+	}
+  	> i {
+	  background-color: rgba(255, 255, 255, 0.65);
 	}
 	.footer {
 		position: absolute;
