@@ -950,10 +950,10 @@ a.github-fork {
 		-webkit-overflow-scrolling: touch;
 		.custom-scroll(transparent, rgba(255, 255, 255, 0.05));
 		direction: rtl;
-		.calc(height, ~'100% - ' @header-min-height);
+		.calc(height, ~'100% - ' @header-min-height + @footer-min-height);
 		.transition(transform .3s cubic-bezier(.5, 0, .1, 1));
 		&._hidden {
-			.transform(translateX(-86%) translateX(-36px));
+			.transform(translateY(-86%) translateY(-36px));
 		}
 		> .wrapper {
 			direction: ltr;
@@ -998,13 +998,7 @@ a.github-fork {
 					background-color: #D30230;
 				}
 			}
-		  	&.settings {
-			{
-			  display: none;
-			}
-			}
 		}
-
 		span.soon {
 			// content: "em breve";
 			width: 100px;
