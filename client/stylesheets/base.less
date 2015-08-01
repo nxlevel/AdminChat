@@ -953,7 +953,7 @@ a.github-fork {
 		.calc(height, ~'100% - ' @header-min-height);
 		.transition(transform .3s cubic-bezier(.5, 0, .1, 1));
 		&._hidden {
-			.transform(translateX(-86%) translateX(-36px));
+			.transform(translateX(-88%) translateX(-38px));
 		}
 		> .wrapper {
 			direction: ltr;
@@ -999,6 +999,9 @@ a.github-fork {
 				}
 			}
 		}
+	  	.settings {
+		display: none;
+	  	}
 		span.soon {
 			// content: "em breve";
 			width: 100px;
@@ -1314,21 +1317,21 @@ a.github-fork {
 		min-height: @header-min-height;
 		height: @header-min-height;
 		background-color: @primary-background-color;
-	}
-	> .burger {
-	  left: 205px;
-	  margin: 0;
-	  padding: 17px 17px;
-	  top: 0;
-	  border-right: solid 1px #084B75;
-		&.hover > i,
+	  .burger {
+		left: 205px;
+		margin: 0;
+		padding: 17px 17px;
+		top: 0;
+		border-right: solid 1px #084B75;
 		&:hover > i {
 		  background-color: #3EAFDB;
 		}
+		&i {
+		  background-color: rgba(255, 255, 255, 0.65);
+		}
+	  }
 	}
-  	> i {
-	  background-color: rgba(255, 255, 255, 0.65);
-	}
+
 	.footer {
 		position: absolute;
 		bottom: 0;
