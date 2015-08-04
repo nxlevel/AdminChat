@@ -1058,7 +1058,20 @@ a.github-fork {
 			color: rgba(255, 255, 255, 0.85);
 		}
 	}
+  &:after {
+	right: 8px;
+	top: 22px;
+	content: '...';
+	font-size: 30px;
+	color: #91AFC6;
+	-ms-transform: rotate(90deg);
+	-webkit-transform: rotate(90deg);
+	transform: rotate(90deg);
+	position: fixed;
+  }
 }
+
+
 
 // rooms-box
 .flex-nav {
@@ -1318,18 +1331,17 @@ a.github-fork {
 		height: @header-min-height;
 		background-color: @primary-background-color;
 	  .doticon:before {
-		left: 205px;
+		right: 5px;
 		margin: 0;
-		padding: 17px 17px;
-		top: 0;
-		border-right: solid 1px #084B75;
+		top: 22px;
 		content: '...';
 		font-size: 30px;
-		color: #fff;
+		color: #99B5B9;
 		-ms-transform: rotate(90deg);
 		-webkit-transform: rotate(90deg);
 		transform: rotate(90deg);
-		
+		position: fixed;
+
 	  }
 	}
 
