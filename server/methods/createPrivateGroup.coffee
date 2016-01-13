@@ -3,9 +3,15 @@ Meteor.methods
 		if not Meteor.userId()
 			throw new Meteor.Error 'invalid-user', "[methods] createPrivateGroup -> Invalid user"
 
-		console.log '[methods] createPrivateGroup -> '.green, 'userId:', Meteor.userId(), 'arguments:', arguments
+		unless RocketChat.authz.hasPermission(Meteor.userId(), 'create-p')
+			throw new Meteor.Error 'not-authorized', '[methods] createPrivateGroup -> Not authorized'
 
-		if not /^[0-9a-z-_]+$/i.test name
+		try
+			nameValidation = new RegExp '^' + RocketChat.settings.get('UTF8_Names_Validation') + '$'
+		catch
+			nameValidation = new RegExp '^[0-9a-zA-Z-_.]+$'
+
+		if not nameValidation.test name
 			throw new Meteor.Error 'name-invalid'
 
 		now = new Date()
@@ -14,45 +20,36 @@ Meteor.methods
 
 		members.push me.username
 
-		name = s.slugify name
+		# name = s.slugify name
 
 		# avoid duplicate names
-		if ChatRoom.findOne({name:name})
-			throw new Meteor.Error 'duplicate-name'
+		if RocketChat.models.Rooms.findOneByName name
+			if RocketChat.models.Rooms.findOneByName(name).archived
+				throw new Meteor.Error 'archived-duplicate-name'
+			else
+				throw new Meteor.Error 'duplicate-name'
 
 		# create new room
-		rid = ChatRoom.insert
-			usernames: members
+		room = RocketChat.models.Rooms.createWithTypeNameUserAndUsernames 'p', name, me, members,
 			ts: now
-			t: 'p'
-			u:
-				_id: me._id
-				username: me.username
-			name: name
-			msgs: 0
+
+		# set creator as group moderator.  permission limited to group by scoping to rid
+		RocketChat.authz.addUserRoles(Meteor.userId(), 'moderator', room._id)
 
 		for username in members
-			member = Meteor.users.findOne({ username: username },{ fields: { username: 1 }})
+			member = RocketChat.models.Users.findOneByUsername(username, { fields: { username: 1 }})
 			if not member?
 				continue
 
-			subscription =
-				rid: rid
-				ts: now
-				name: name
-				t: 'p'
-				open: true
-				u:
-					_id: member._id
-					username: member.username
+			extra = {}
 
 			if username is me.username
-				subscription.ls = now
+				extra.ls = now
 			else
-				subscription.alert = true
+				extra.alert = true
 
-			ChatSubscription.insert subscription
+			RocketChat.models.Subscriptions.createWithRoomAndUser room, member, extra
 
 		return {
-			rid: rid
+			rid: room._id
 		}

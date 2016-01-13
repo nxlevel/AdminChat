@@ -2,9 +2,7 @@ Meteor.publish 'userData', ->
 	unless this.userId
 		return this.ready()
 
-	console.log '[publish] userData'.green
-
-	Meteor.users.find this.userId,
+	RocketChat.models.Users.find this.userId,
 		fields:
 			name: 1
 			username: 1
@@ -12,4 +10,9 @@ Meteor.publish 'userData', ->
 			statusDefault: 1
 			statusConnection: 1
 			avatarOrigin: 1
-			admin: 1
+			utcOffset: 1
+			language: 1
+			settings: 1
+			defaultRoom: 1
+			'services.github.id': 1
+			'services.gitlab.id': 1

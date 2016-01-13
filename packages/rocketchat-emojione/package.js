@@ -10,11 +10,12 @@ Package.onUse(function(api) {
 
 	api.use([
 		'coffeescript',
-		'qnub:emojione',
-		'rocketchat:lib@0.0.1'
+		'emojione:emojione',
+		'rocketchat:lib'
 	]);
 
 	api.addFiles('emojione.coffee', ['server','client']);
+	api.addFiles('rocketchat.coffee', 'client');
 });
 
 Package.onTest(function(api) {

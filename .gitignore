@@ -2,6 +2,7 @@
 **/build/*
 **/node_modules/*
 **/tmp/*
+/private/certs/*
 *.bak
 *.iml
 *.ipr
@@ -45,7 +46,6 @@
 .Trashes
 .wtpmodules
 \#*\#
-BuildInfo.js
 Desktop.ini
 ehthumbs.db
 example.css
@@ -63,3 +63,7 @@ temp_*
 Thumbs.db
 thumbs.db
 tramp
+ecosystem.json
+pm2.json
+settings.json
+build.sh

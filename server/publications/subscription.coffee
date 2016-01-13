@@ -2,14 +2,7 @@ Meteor.publish 'subscription', ->
 	unless this.userId
 		return this.ready()
 
-	console.log '[publish] subscription'.green
-
-	ChatSubscription.find
-		'u._id': this.userId
-		open: true
-		# ts:
-		# 	$gte: moment().subtract(2, 'days').startOf('day').toDate()
-	,
+	RocketChat.models.Subscriptions.findByUserId this.userId,
 		fields:
 			t: 1
 			ts: 1
@@ -20,3 +13,4 @@ Meteor.publish 'subscription', ->
 			open: 1
 			alert: 1
 			unread: 1
+			archived: 1

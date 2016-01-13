@@ -4,42 +4,35 @@ Meteor.publish 'messages', (rid, start) ->
 
 	publication = this
 
-	console.log '[publish] messages ->'.green, 'rid:', rid, 'start:', start
-
 	if typeof rid isnt 'string'
 		return this.ready()
 
 	if not Meteor.call 'canAccessRoom', rid, this.userId
 		return this.ready()
 
-	cursor = ChatMessage.find
-		rid: rid
-		_deleted:
-			$ne: true
-	,
+	cursor = RocketChat.models.Messages.findVisibleByRoomId rid,
 		sort:
 			ts: -1
 		limit: 50
 
 	cursorHandle = cursor.observeChanges
 		added: (_id, record) ->
+			record.starred = _.findWhere record.starred, { _id: publication.userId }
 			publication.added('rocketchat_message', _id, record)
 
 		changed: (_id, record) ->
+			record.starred = _.findWhere record.starred, { _id: publication.userId }
 			publication.changed('rocketchat_message', _id, record)
 
-	cursorDelete = ChatMessage.find
-		rid: rid
-		_deleted: true
-	,
+	cursorDelete = RocketChat.models.Messages.findInvisibleByRoomId rid,
 		fields:
 			_id: 1
 
 	cursorDeleteHandle = cursorDelete.observeChanges
 		added: (_id, record) ->
-			publication.added('rocketchat_message', _id, {_deleted: true})
+			publication.added('rocketchat_message', _id, {_hidden: true})
 		changed: (_id, record) ->
-			publication.added('rocketchat_message', _id, {_deleted: true})
+			publication.added('rocketchat_message', _id, {_hidden: true})
 
 	@ready()
 	@onStop ->

@@ -1,21 +1,11 @@
-Meteor.publish 'room', (rid) ->
+Meteor.publish 'room', (typeName) ->
 	unless this.userId
 		return this.ready()
 
-	console.log '[publish] room ->'.green, 'arguments:', arguments
-
-	if typeof rid isnt 'string'
+	if typeof typeName isnt 'string'
 		return this.ready()
 
-	if not Meteor.call 'canAccessRoom', rid, this.userId
-		return this.ready()
+	type = typeName.substr(0, 1)
+	name = typeName.substr(1)
 
-	ChatRoom.find
-		_id: rid
-	,
-		fields:
-			name: 1
-			t: 1
-			cl: 1
-			u: 1
-			usernames: 1
+	return RocketChat.roomTypes.runPublish.call(this, type, name)

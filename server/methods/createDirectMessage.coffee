@@ -3,15 +3,12 @@ Meteor.methods
 		if not Meteor.userId()
 			throw new Meteor.Error 'invalid-user', "[methods] createDirectMessage -> Invalid user"
 
-		console.log '[methods] createDirectMessage -> '.green, 'userId:', Meteor.userId(), 'arguments:', arguments
-
 		me = Meteor.user()
 
 		if me.username is username
-			return
+			throw new Meteor.Error('invalid-user', "[methods] createDirectMessage -> Invalid target user")
 
-		to = Meteor.users.findOne
-			username: username
+		to = RocketChat.models.Users.findOneByUsername username
 
 		if not to
 			throw new Meteor.Error('invalid-user', "[methods] createDirectMessage -> Invalid target user")
@@ -21,7 +18,7 @@ Meteor.methods
 		now = new Date()
 
 		# Make sure we have a room
-		ChatRoom.upsert
+		RocketChat.models.Rooms.upsert
 			_id: rid
 		,
 			$set:
@@ -32,17 +29,17 @@ Meteor.methods
 				ts: now
 
 		# Make user I have a subcription to this room
-		ChatSubscription.upsert
+		RocketChat.models.Subscriptions.upsert
 			rid: rid
-			$and: [{'u._id': me._id}]
+			$and: [{'u._id': me._id}] # work around to solve problems with upsert and dot
 		,
 			$set:
 				ts: now
 				ls: now
+				open: true
 			$setOnInsert:
 				name: to.username
 				t: 'd'
-				open: true
 				alert: false
 				unread: 0
 				u:
@@ -50,9 +47,9 @@ Meteor.methods
 					username: me.username
 
 		# Make user the target user has a subcription to this room
-		ChatSubscription.upsert
+		RocketChat.models.Subscriptions.upsert
 			rid: rid
-			$and: [{'u._id': to._id}]
+			$and: [{'u._id': to._id}] # work around to solve problems with upsert and dot
 		,
 			$setOnInsert:
 				name: me.username

@@ -1,30 +1,29 @@
 Meteor.methods
 	removeUserFromRoom: (data) ->
 		fromId = Meteor.userId()
-		# console.log '[methods] removeUserFromRoom -> '.green, 'fromId:', fromId, 'data:', data
+		check(data, Match.ObjectIncluding({ rid: String, username: String }))
 
-		room = ChatRoom.findOne data.rid
+		unless RocketChat.authz.hasPermission(fromId, 'remove-user', data.rid)
+			throw new Meteor.Error 'not-allowed', 'Not allowed'
 
-		if room.u?._id isnt Meteor.userId() and room.t is 'c'
-			throw new Meteor.Error 403, 'Not allowed'
+		room = RocketChat.models.Rooms.findOneById data.rid
 
-		update =
-			$pull:
-				usernames: data.username
+		if data.username not in (room?.usernames or [])
+			throw new Meteor.Error 'not-in-room', 'User is not in this room'
 
-		removedUser = Meteor.users.findOne username: data.username
+		removedUser = RocketChat.models.Users.findOneByUsername data.username
 
-		ChatRoom.update data.rid, update
+		RocketChat.models.Rooms.removeUsernameById data.rid, data.username
 
-		ChatSubscription.remove { 'u._id': data.username, rid: data.rid }
+		RocketChat.models.Subscriptions.removeByRoomIdAndUserId data.rid, removedUser._id
 
-		ChatMessage.insert
-			rid: data.rid
-			ts: (new Date)
-			t: 'ru'
-			msg: removedUser.name
+		if room.t in [ 'c', 'p' ]
+			RocketChat.authz.removeUserFromRoles(removedUser._id; 'moderator', data.rid)
+
+		fromUser = RocketChat.models.Users.findOneById fromId
+		RocketChat.models.Messages.createUserRemovedWithRoomIdAndUser data.rid, removedUser,
 			u:
-				_id: Meteor.userId()
-				username: Meteor.user().username
+				_id: fromUser._id
+				username: fromUser.username
 
 		return true

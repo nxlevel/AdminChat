@@ -2,11 +2,7 @@ Meteor.publish 'privateHistory', ->
 	unless this.userId
 		return this.ready()
 
-	console.log '[publish] privateHistory'.green
-
-	ChatRoom.find
-		usernames: Meteor.users.findOne(this.userId).username
-	,
+	RocketChat.models.Rooms.findByContainigUsername RocketChat.models.Users.findOneById(this.userId).username,
 		fields:
 			t: 1
 			name: 1

@@ -1,15 +1,16 @@
 Meteor.startup ->
+	TimeSync.loggingEnabled = false
+
 	UserPresence.awayTime = 300000
 	UserPresence.start()
 	Meteor.subscribe("activeUsers")
 
-	Session.setDefault('flexOpened', false)
 	Session.setDefault('AvatarRandom', 0)
 
 	window.lastMessageWindow = {}
 	window.lastMessageWindowHistory = {}
 
-	@defaultUserLanguage = ->
+	@defaultAppLanguage = ->
 		lng = window.navigator.userLanguage || window.navigator.language || 'en'
 		# Fix browsers having all-lowercase language settings eg. pt-br, en-us
 		re = /([a-z]{2}-)([a-z]{2})/
@@ -17,16 +18,40 @@ Meteor.startup ->
 			lng = lng.replace re, (match, parts...) -> return parts[0] + parts[1].toUpperCase()
 		return lng
 
-	if localStorage.getItem("userLanguage")
-		userLanguage = localStorage.getItem("userLanguage")
-	else
-		userLanguage = defaultUserLanguage()
-	localStorage.setItem("userLanguage", userLanguage)
+	@defaultUserLanguage = ->
+		return RocketChat.settings.get('Language') || defaultAppLanguage()
 
-	userLanguage = userLanguage.split('-').shift()
-	TAPi18n.setLanguage(userLanguage)
+	loadedLaguages = []
 
-	filename = "/moment-locales/#{userLanguage.toLowerCase()}.js"
-	if filename isnt '/moment-locales/en.js'
-		$.getScript filename, (data) ->
-			moment.locale(userLanguage)
+	@setLanguage = (language) ->
+		if !language
+			return
+
+		if loadedLaguages.indexOf(language) > -1
+			return
+
+		loadedLaguages.push language
+
+		if isRtl language
+			$('html').addClass "rtl"
+		else
+			$('html').removeClass "rtl"
+
+		language = language.split('-').shift()
+		TAPi18n.setLanguage(language)
+
+		language = language.toLowerCase()
+		if language isnt 'en'
+			Meteor.call 'loadLocale', language, (err, localeFn) ->
+				Function(localeFn)()
+				moment.locale(language)
+
+	Meteor.subscribe("userData", () ->
+		userLanguage = Meteor.user()?.language
+		userLanguage ?= defaultUserLanguage()
+
+		if localStorage.getItem('userLanguage') isnt userLanguage
+			localStorage.setItem('userLanguage', userLanguage)
+
+		setLanguage userLanguage
+	)

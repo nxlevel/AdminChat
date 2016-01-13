@@ -3,20 +3,48 @@ Meteor.methods
 		if not Meteor.userId()
 			throw new Meteor.Error('invalid-user', "[methods] updateMessage -> Invalid user")
 
-		console.log '[methods] updateMessage -> '.green, 'userId:', Meteor.userId(), 'arguments:', arguments
+		originalMessage = RocketChat.models.Messages.findOneById message._id
 
-		message.ets = new Date()
+		if not originalMessage?._id?
+			return
 
-		if urls = message.msg.match /([A-Za-z]{3,9}):\/\/([-;:&=\+\$,\w]+@{1})?([-A-Za-z0-9\.]+)+:?(\d+)?((\/[-\+=!:~%\/\.@\,\w]+)?\??([-\+=&!:;%@\/\.\,\w]+)?#?([\w]+)?)?/g
-			message.urls = urls
+		hasPermission = RocketChat.authz.hasPermission(Meteor.userId(), 'edit-message', message.rid)
+		editAllowed = RocketChat.settings.get 'Message_AllowEditing'
+		editOwn = originalMessage?.u?._id is Meteor.userId()
+
+		me = RocketChat.models.Users.findOneById Meteor.userId()
+
+		unless hasPermission or (editAllowed and editOwn)
+			throw new Meteor.Error 'message-editing-not-allowed', "[methods] updateMessage -> Message editing not allowed"
+
+		blockEditInMinutes = RocketChat.settings.get 'Message_AllowEditing_BlockEditInMinutes'
+		if blockEditInMinutes? and blockEditInMinutes isnt 0
+			msgTs = moment(originalMessage.ts) if originalMessage.ts?
+			currentTsDiff = moment().diff(msgTs, 'minutes') if msgTs?
+			if currentTsDiff > blockEditInMinutes
+				throw new Meteor.Error 'message-editing-blocked'
+
+		# If we keep history of edits, insert a new message to store history information
+		if RocketChat.settings.get 'Message_KeepHistory'
+			RocketChat.models.Messages.cloneAndSaveAsHistoryById originalMessage._id
+
+		message.editedAt = new Date()
+		message.editedBy =
+			_id: Meteor.userId()
+			username: me.username
+
+		if urls = message.msg.match /([A-Za-z]{3,9}):\/\/([-;:&=\+\$,\w]+@{1})?([-A-Za-z0-9\.]+)+:?(\d+)?((\/[-\+=!:~%\/\.@\,\w]+)?\??([-\+=&!:;%@\/\.\,\w]+)?#?([^\s]+)?)?/g
+			message.urls = urls.map (url) -> url: url
 
 		message = RocketChat.callbacks.run 'beforeSaveMessage', message
 
-		ChatMessage.update
-			_id: message.id
-			'u._id': Meteor.userId()
+		tempid = message._id
+		delete message._id
+
+		RocketChat.models.Messages.update
+			_id: tempid
 		,
 			$set: message
 
-		# Meteor.defer ->
-		# 	RocketChat.callbacks.run 'afterSaveMessage', ChatMessage.findOne(message.id)
+		Meteor.defer ->
+			RocketChat.callbacks.run 'afterSaveMessage', RocketChat.models.Messages.findOneById(tempid)
